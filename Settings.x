@@ -28,10 +28,28 @@ static NSString *GetCacheSize() {
 + (NSArray *)settingsCategoryOrder {
     NSArray *order = %orig;
     NSMutableArray *mutableOrder = [order mutableCopy];
-    NSUInteger insertIndex = [order indexOfObject:@(1)];
+    
+    // Try multiple common category IDs
+    NSUInteger insertIndex = [order indexOfObject:@(1)]; // General
+    if (insertIndex == NSNotFound) insertIndex = [order indexOfObject:@(0)]; // Account
+    if (insertIndex == NSNotFound) insertIndex = [order indexOfObject:@(12)]; // App settings
+    
     if (insertIndex != NSNotFound)
         [mutableOrder insertObject:@(YTLiteSection) atIndex:insertIndex + 1];
+    else
+        [mutableOrder insertObject:@(YTLiteSection) atIndex:0]; // Fallback to beginning
+        
     return mutableOrder;
+}
+%end
+
+%hook YTPlayerViewController
+- (void)viewDidLoad {
+    %orig;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        [[%c(YTToastResponderEvent) eventWithMessage:@"YTLite v3.0.1 Loaded ✅" firstResponder:self] send];
+    });
 }
 %end
 
