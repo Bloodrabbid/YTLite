@@ -640,8 +640,8 @@ static NSString *GetCacheSize() {
     [sectionItems addObject:version];
 
     BOOL isNew = [settingsViewController respondsToSelector:@selector(setSectionItems:forCategory:title:icon:titleDescription:headerHidden:)];
-    isNew ? [settingsViewController setSectionItems:sectionItems forCategory:YTLiteSection title:@"YTLite" icon:nil titleDescription:nil headerHidden:NO]
-          : [settingsViewController setSectionItems:sectionItems forCategory:YTLiteSection title:@"YTLite" titleDescription:nil headerHidden:NO];
+    isNew ? [settingsViewController setSectionItems:sectionItems forCategory:YTLiteSection title:@"YTLite-Yandex" icon:nil titleDescription:nil headerHidden:NO]
+          : [settingsViewController setSectionItems:sectionItems forCategory:YTLiteSection title:@"YTLite-Yandex" titleDescription:nil headerHidden:NO];
 
 }
 
@@ -649,7 +649,13 @@ static NSString *GetCacheSize() {
     if (category == YTLiteSection) {
         [self updateYTLiteSectionWithEntry:entry];
         return;
-    } %orig;
+    }
+    %orig;
+
+    // Fallback: Show YTLite settings in General section (1)
+    if (category == 1) {
+        [self updateYTLiteSectionWithEntry:entry];
+    }
 }
 
 %new

@@ -483,9 +483,17 @@ void autoSkipShorts(YTPlayerViewController *self, YTSingleVideoController *video
                 
                 [[%c(YTToastResponderEvent) eventWithMessage:LOC(@"Translated") firstResponder:self] send];
                 
+                if (self.mediaTime > 0) {
+                    [self.ytl_yandexPlayer seekToTime:CMTimeMakeWithSeconds(self.mediaTime, 1000)];
+                }
+
                 if (self.activeVideo.playbackRate > 0) {
                     self.ytl_yandexPlayer.rate = self.activeVideo.playbackRate;
                 }
+                
+                [self.ytl_yandexPlayer play];
+            } else if (!audioURL) {
+                [[%c(YTToastResponderEvent) eventWithMessage:@"⚠️ Yandex: No audio URL" firstResponder:self] send];
             }
         });
     }];
