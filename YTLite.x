@@ -483,8 +483,13 @@ void autoSkipShorts(YTPlayerViewController *self, YTSingleVideoController *video
                 
                 [[%c(YTToastResponderEvent) eventWithMessage:LOC(@"Translated") firstResponder:self] send];
                 
-                if (self.mediaTime > 0) {
-                    [self.ytl_yandexPlayer seekToTime:CMTimeMakeWithSeconds(self.mediaTime, 1000)];
+                CGFloat mediaTime = 0;
+                if ([self.activeVideoPlayerOverlay isKindOfClass:%c(YTMainAppVideoPlayerOverlayViewController)]) {
+                    mediaTime = [(YTMainAppVideoPlayerOverlayViewController *)self.activeVideoPlayerOverlay mediaTime];
+                }
+
+                if (mediaTime > 0) {
+                    [self.ytl_yandexPlayer seekToTime:CMTimeMakeWithSeconds(mediaTime, 1000)];
                 }
 
                 if (self.activeVideo.playbackRate > 0) {
