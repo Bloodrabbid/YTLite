@@ -452,7 +452,10 @@ void autoSkipShorts(YTPlayerViewController *self, YTSingleVideoController *video
 
 %new
 - (void)autoTranslateYandex {
-    if (!self.contentVideoID || self.ytl_isTranslating || [self.ytl_currentTranslatingVideoID isEqualToString:self.contentVideoID]) return;
+    if (!ytlBool(@"yandexTranslation") || self.ytl_isTranslating) return;
+
+    NSString *videoID = [self contentVideoID];
+    if (!videoID) return;
     
     self.ytl_isTranslating = YES;
     self.ytl_currentTranslatingVideoID = self.contentVideoID;
