@@ -119,6 +119,7 @@ static NSString *readString(NSData *data, NSUInteger *offset) {
     return str;
 }
 
+/*
 static double readDouble(NSData *data, NSUInteger *offset) {
     if (*offset + 8 > data.length) return 0;
     double val;
@@ -126,6 +127,7 @@ static double readDouble(NSData *data, NSUInteger *offset) {
     *offset += 8;
     return val;
 }
+*/
 
 #pragma mark - Networking
 
@@ -160,7 +162,7 @@ static double readDouble(NSData *data, NSUInteger *offset) {
         
         NSUInteger offset = 0;
         NSString *secretKey = nil;
-        uint64_t expires = 0;
+        // uint64_t expires = 0;
         
         while (offset < data.length) {
             uint64_t tagAndType = readVarint(data, &offset);
@@ -170,7 +172,8 @@ static double readDouble(NSData *data, NSUInteger *offset) {
             if (tag == 1 && type == 2) {
                 secretKey = readString(data, &offset);
             } else if (tag == 2 && type == 0) {
-                expires = readVarint(data, &offset);
+                // expires = readVarint(data, &offset);
+                readVarint(data, &offset);
             } else {
                 if (type == 0) readVarint(data, &offset);
                 else if (type == 1) offset += 8;

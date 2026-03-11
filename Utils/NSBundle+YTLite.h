@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
-#import <roothide.h>
+// No roothide needed for jailed build
 
 NS_ASSUME_NONNULL_BEGIN
 
