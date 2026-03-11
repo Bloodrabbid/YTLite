@@ -1,4 +1,6 @@
 #import "YTLite.h"
+#import <AVFoundation/AVFoundation.h>
+#import "Utils/YTLYandexTranslationFetcher.h"
 
 static UIImage *YTImageNamed(NSString *imageName) {
     return [UIImage imageNamed:imageName inBundle:[NSBundle mainBundle] compatibleWithTraitCollection:nil];
@@ -426,15 +428,66 @@ void autoSkipShorts(YTPlayerViewController *self, YTSingleVideoController *video
 }
 
 %hook YTPlayerViewController
+%property (nonatomic, strong) AVPlayer *ytl_yandexPlayer;
+%property (nonatomic, assign) BOOL ytl_isTranslating;
+%property (nonatomic, strong) NSString *ytl_currentTranslatingVideoID;
+
 - (void)loadWithPlayerTransition:(id)arg1 playbackConfig:(id)arg2 {
     %orig;
+
+    if (self.ytl_yandexPlayer) {
+        [self.ytl_yandexPlayer pause];
+        self.ytl_yandexPlayer = nil;
+    }
+    self.ytl_isTranslating = NO;
+    self.ytl_currentTranslatingVideoID = nil;
 
     if (ytlInt(@"wiFiQualityIndex") != 0 || ytlInt(@"cellQualityIndex") != 0) [self performSelector:@selector(autoQuality) withObject:nil afterDelay:1.0];
     if (ytlBool(@"autoFullscreen")) [self performSelector:@selector(autoFullscreen) withObject:nil afterDelay:0.75];
     if (ytlBool(@"shortsToRegular")) [self performSelector:@selector(shortsToRegular) withObject:nil afterDelay:0.75];
     if (ytlInt(@"autoSpeedIndex") != 3) [self performSelector:@selector(setAutoSpeed) withObject:nil afterDelay:0.75];
     if (ytlBool(@"disableAutoCaptions")) [self performSelector:@selector(turnOffCaptions) withObject:nil afterDelay:1.0];
+    if (ytlBool(@"yandexTranslation")) [self performSelector:@selector(autoTranslateYandex) withObject:nil afterDelay:0.5];
 }
+
+%new
+- (void)autoTranslateYandex {
+    if (!self.contentVideoID || self.ytl_isTranslating || [self.ytl_currentTranslatingVideoID isEqualToString:self.contentVideoID]) return;
+    
+    self.ytl_isTranslating = YES;
+    self.ytl_currentTranslatingVideoID = self.contentVideoID;
+    
+    [[%c(YTToastResponderEvent) eventWithMessage:[NSString stringWithFormat:@"%@...", LOC(@"YandexTranslation")] firstResponder:self] send];
+    
+    NSTimeInterval duration = self.activeVideo.totalMediaTime > 0 ? self.activeVideo.totalMediaTime : 600; 
+    
+    [YTLYandexTranslationFetcher requestTranslationForVideoID:self.contentVideoID duration:duration completionHandler:^(NSURL *audioURL, NSError *error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.ytl_isTranslating = NO;
+            if (error) {
+                if (error.code == 2) {
+                    [[%c(YTToastResponderEvent) eventWithMessage:error.localizedDescription firstResponder:self] send];
+                    [self performSelector:@selector(autoTranslateYandex) withObject:nil afterDelay:20.0];
+                } else {
+                    [[%c(YTToastResponderEvent) eventWithMessage:[NSString stringWithFormat:@"Yandex API Error: %@", error.localizedDescription] firstResponder:self] send];
+                }
+                return;
+            }
+            if (audioURL && [self.contentVideoID isEqualToString:self.ytl_currentTranslatingVideoID]) {
+                AVPlayerItem *item = [AVPlayerItem playerItemWithURL:audioURL];
+                self.ytl_yandexPlayer = [AVPlayer playerWithPlayerItem:item];
+                self.ytl_yandexPlayer.volume = 1.0;
+                
+                [[%c(YTToastResponderEvent) eventWithMessage:LOC(@"Translated") firstResponder:self] send];
+                
+                if (self.activeVideo.playbackRate > 0) {
+                    self.ytl_yandexPlayer.rate = self.activeVideo.playbackRate;
+                }
+            }
+        });
+    }];
+}
+
 
 %new
 - (void)autoFullscreen {
@@ -533,6 +586,22 @@ void autoSkipShorts(YTPlayerViewController *self, YTSingleVideoController *video
 - (void)singleVideo:(YTSingleVideoController *)video currentVideoTimeDidChange:(YTSingleVideoTime *)time {
     %orig;
 
+    if (self.ytl_yandexPlayer && self.ytl_yandexPlayer.currentItem.status == AVPlayerItemStatusReadyToPlay) {
+        CGFloat ytRate = video.playbackRate;
+        CGFloat ytTime = time.time;
+        
+        // Sync rate
+        if (self.ytl_yandexPlayer.rate != ytRate) {
+            self.ytl_yandexPlayer.rate = ytRate;
+        }
+        
+        // Sync time if drift is > 0.5 sec
+        CGFloat yandexTime = CMTimeGetSeconds(self.ytl_yandexPlayer.currentTime);
+        if (fabs(yandexTime - ytTime) > 0.5) {
+            [self.ytl_yandexPlayer seekToTime:CMTimeMakeWithSeconds(ytTime, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        }
+    }
+
     addEndTime(self, video, time);
     autoSkipShorts(self, video, time);
 }
@@ -543,6 +612,19 @@ void autoSkipShorts(YTPlayerViewController *self, YTSingleVideoController *video
     addEndTime(self, video, time);
     autoSkipShorts(self, video, time);
 }
+
+- (void)play {
+    %orig;
+    if (self.ytl_yandexPlayer) {
+        self.ytl_yandexPlayer.rate = self.activeVideo.playbackRate > 0 ? self.activeVideo.playbackRate : 1.0;
+    }
+}
+
+- (void)pause {
+    %orig;
+    if (self.ytl_yandexPlayer) [self.ytl_yandexPlayer pause];
+}
+
 %end
 
 %hook YTInlinePlayerBarContainerView

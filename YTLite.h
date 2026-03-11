@@ -147,6 +147,13 @@
 - (void)pause;
 @end
 
+@interface YTPlayerViewController (YTLite)
+@property (nonatomic, strong) AVPlayer *ytl_yandexPlayer;
+@property (nonatomic, assign) BOOL ytl_isTranslating;
+@property (nonatomic, strong) NSString *ytl_currentTranslatingVideoID;
+- (void)autoTranslateYandex;
+@end
+
 @interface YTPlayerView : UIView
 @property (nonatomic, weak, readwrite) YTPlayerViewController *playerViewDelegate;
 @property (nonatomic, strong, readwrite) UIView *overlayView;
