@@ -28,28 +28,10 @@ static NSString *GetCacheSize() {
 + (NSArray *)settingsCategoryOrder {
     NSArray *order = %orig;
     NSMutableArray *mutableOrder = [order mutableCopy];
-    
-    // Try multiple common category IDs
-    NSUInteger insertIndex = [order indexOfObject:@(1)]; // General
-    if (insertIndex == NSNotFound) insertIndex = [order indexOfObject:@(0)]; // Account
-    if (insertIndex == NSNotFound) insertIndex = [order indexOfObject:@(12)]; // App settings
-    
+    NSUInteger insertIndex = [order indexOfObject:@(1)];
     if (insertIndex != NSNotFound)
         [mutableOrder insertObject:@(YTLiteSection) atIndex:insertIndex + 1];
-    else
-        [mutableOrder insertObject:@(YTLiteSection) atIndex:0]; // Fallback to beginning
-        
     return mutableOrder;
-}
-%end
-
-%hook YTPlayerViewController
-- (void)viewDidLoad {
-    %orig;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        [[%c(YTToastResponderEvent) eventWithMessage:@"YTLite v3.0.1 Loaded ✅" firstResponder:self] send];
-    });
 }
 %end
 
@@ -640,8 +622,8 @@ static NSString *GetCacheSize() {
     [sectionItems addObject:version];
 
     BOOL isNew = [settingsViewController respondsToSelector:@selector(setSectionItems:forCategory:title:icon:titleDescription:headerHidden:)];
-    isNew ? [settingsViewController setSectionItems:sectionItems forCategory:YTLiteSection title:@"YTLite-Yandex" icon:nil titleDescription:nil headerHidden:NO]
-          : [settingsViewController setSectionItems:sectionItems forCategory:YTLiteSection title:@"YTLite-Yandex" titleDescription:nil headerHidden:NO];
+    isNew ? [settingsViewController setSectionItems:sectionItems forCategory:YTLiteSection title:@"YTLite" icon:nil titleDescription:nil headerHidden:NO]
+          : [settingsViewController setSectionItems:sectionItems forCategory:YTLiteSection title:@"YTLite" titleDescription:nil headerHidden:NO];
 
 }
 
@@ -649,13 +631,7 @@ static NSString *GetCacheSize() {
     if (category == YTLiteSection) {
         [self updateYTLiteSectionWithEntry:entry];
         return;
-    }
-    %orig;
-
-    // Fallback: Show YTLite settings in General section (1)
-    if (category == 1) {
-        [self updateYTLiteSectionWithEntry:entry];
-    }
+    } %orig;
 }
 
 %new
