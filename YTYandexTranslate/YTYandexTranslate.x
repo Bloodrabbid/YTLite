@@ -56,7 +56,9 @@ static void showNativeAlert(NSString *title, NSString *message) {
     self.ytl_isTranslating = NO;
     self.ytl_currentTranslatingVideoID = nil;
 
-    [self performSelector:@selector(autoTranslateYandex) withObject:nil afterDelay:1.5];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self autoTranslateYandex];
+    });
 }
 
 %new
@@ -82,7 +84,9 @@ static void showNativeAlert(NSString *title, NSString *message) {
             if (error) {
                 showNativeAlert(@"Yandex API Error", error.localizedDescription);
                 if (error.code == 2) {
-                    [self performSelector:@selector(autoTranslateYandex) withObject:nil afterDelay:20.0];
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(20.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                        [self autoTranslateYandex];
+                    });
                 }
                 return;
             }
@@ -145,6 +149,7 @@ static void showNativeAlert(NSString *title, NSString *message) {
 %end
 
 %ctor {
+    %init;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         showNativeAlert(@"YTYandexTranslate", @"Tweak successfully injected and initialized!");
     });
