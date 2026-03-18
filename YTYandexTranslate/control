@@ -1,0 +1,9 @@
+Package: com.yudin.ytyandextranslate
+Name: YTYandexTranslate
+Depends: mobilesubstrate
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Yandex Video Translation for YouTube
+Maintainer: Kirill Yudin
+Author: Kirill Yudin
+Section: Tweaks
