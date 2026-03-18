@@ -9,6 +9,14 @@
 @property(nonatomic, readonly) float playbackRate;
 @end
 
+@interface YTSingleVideoTime : NSObject
+@property(nonatomic, readonly) CGFloat time;
+@end
+
+@interface YTSingleVideoController : NSObject
+@property(nonatomic, readonly) float playbackRate;
+@end
+
 @interface YTMainAppVideoPlayerOverlayViewController : UIViewController
 - (CGFloat)mediaTime;
 @end
@@ -130,6 +138,10 @@ static void showNativeAlert(NSString *title, NSString *message) {
     %orig;
     if (self.ytl_yandexPlayer) {
         [self.ytl_yandexPlayer play];
+    } else {
+        if (![[self contentVideoID] isEqualToString:self.ytl_currentTranslatingVideoID]) {
+            [self autoTranslateYandex];
+        }
     }
 }
 
@@ -144,6 +156,24 @@ static void showNativeAlert(NSString *title, NSString *message) {
     %orig;
     if (self.ytl_yandexPlayer) {
         [self.ytl_yandexPlayer seekToTime:CMTimeMakeWithSeconds(time, 1000)];
+    }
+}
+
+- (void)singleVideo:(id)video currentVideoTimeDidChange:(id)time {
+    %orig;
+
+    if (self.ytl_yandexPlayer && self.ytl_yandexPlayer.currentItem.status == AVPlayerItemStatusReadyToPlay) {
+        CGFloat ytRate = ((YTSingleVideoController *)video).playbackRate;
+        CGFloat ytTime = ((YTSingleVideoTime *)time).time;
+        
+        if (self.ytl_yandexPlayer.rate != ytRate) {
+            self.ytl_yandexPlayer.rate = ytRate;
+        }
+        
+        CGFloat yandexTime = CMTimeGetSeconds(self.ytl_yandexPlayer.currentTime);
+        if (fabs(yandexTime - ytTime) > 0.5) {
+            [self.ytl_yandexPlayer seekToTime:CMTimeMakeWithSeconds(ytTime, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        }
     }
 }
 %end
