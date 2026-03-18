@@ -71,6 +71,10 @@ static void showNativeAlert(NSString *title, NSString *message) {
 
 %new
 - (void)autoTranslateYandex {
+    NSUserDefaults *defaults = [[NSUserDefaults alloc] initWithSuiteName:@"com.google.ios.youtube"];
+    BOOL isYandexEnabled = defaults ? [defaults boolForKey:@"yandexTranslation"] : YES;
+    if (!isYandexEnabled) return;
+
     if (self.ytl_isTranslating) return;
 
     NSString *videoID = [self contentVideoID];
