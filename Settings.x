@@ -143,7 +143,8 @@ static NSString *GetCacheSize() {
         selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
             NSArray <YTSettingsSectionItem *> *rows = @[
             [self switchWithTitle:@"RemoveAds" key:@"noAds"],
-            [self switchWithTitle:@"BackgroundPlayback" key:@"backgroundPlayback"]
+            [self switchWithTitle:@"BackgroundPlayback" key:@"backgroundPlayback"],
+            [self switchWithTitle:@"YandexTranslation" key:@"yandexTranslation"]
         ];
 
         YTSettingsPickerViewController *picker = [[%c(YTSettingsPickerViewController) alloc] initWithNavTitle:LOC(@"General") pickerSectionTitle:nil rows:rows selectedItemIndex:NSNotFound parentResponder:[self parentResponder]];
@@ -221,7 +222,6 @@ static NSString *GetCacheSize() {
         }
         selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
             NSArray <YTSettingsSectionItem *> *rows = @[
-                [self switchWithTitle:@"YandexTranslation" key:@"yandexTranslation"],
                 [self switchWithTitle:@"Miniplayer" key:@"miniplayer"],
                 [self switchWithTitle:@"PortraitFullscreen" key:@"portraitFullscreen"],
                 [self switchWithTitle:@"CopyWithTimestamp" key:@"copyWithTimestamp"],

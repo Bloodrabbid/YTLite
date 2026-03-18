@@ -33,6 +33,13 @@ static NSString *const kDefaultsSuiteName = @"com.dvntm.ytlite";
         @"advancedMode": @YES,
         @"yandexTranslation": @YES
     }];
+
+    // Migration: force-enable advancedMode and yandexTranslation for existing installs
+    if (![self objectForKey:@"ytl_migrationVersion"] || [self integerForKey:@"ytl_migrationVersion"] < 2) {
+        [self setBool:YES forKey:@"advancedMode"];
+        [self setBool:YES forKey:@"yandexTranslation"];
+        [self setInteger:2 forKey:@"ytl_migrationVersion"];
+    }
 }
 
 + (void)resetUserDefaults {
